@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "expo.vscode-expo-tools",
+    "astro-build.astro-vscode",
+    "prisma.prisma",
+    "bierner.markdown-preview-github-styles",
+    "yzhang.markdown-all-in-one",
+    "bradlc.vscode-tailwindcss",
+    "heybourn.headwind"
+  ]
+}

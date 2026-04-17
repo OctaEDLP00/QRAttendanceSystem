@@ -1,0 +1,14 @@
+{
+  "extends": "astro/tsconfigs/strictest",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "paths": {
+      "~/*": [ "./src/*" ]
+    }
+  },
+  "include": [ ".astro/types.d.ts", "**/*" ],
+  "exclude": [ "dist" ]
+}

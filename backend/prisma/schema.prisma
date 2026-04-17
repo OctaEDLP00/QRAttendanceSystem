@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Institution {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  users   User[]
+  courses Course[]
+
+  @@map("institutions")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  password      String
+  role          Role
+  institutionId String
+  createdAt     DateTime @default(now())
+
+  institution Institution  @relation(fields: [institutionId], references: [id])
+  attendances Attendance[]
+  courses     Course[]     @relation("TeacherCourses")
+
+  @@map("users")
+}
+
+model Course {
+  id            String   @id @default(uuid())
+  name          String
+  teacherId     String
+  institutionId String
+  createdAt     DateTime @default(now())
+
+  teacher     User         @relation("TeacherCourses", fields: [teacherId], references: [id])
+  institution Institution  @relation(fields: [institutionId], references: [id])
+  attendances Attendance[]
+  qrSessions  QRSession[]
+
+  @@map("courses")
+}
+
+model Attendance {
+  id        String           @id @default(uuid())
+  studentId String
+  courseId  String
+  status    AttendanceStatus
+  latitude  Float
+  longitude Float
+  timestamp DateTime         @default(now())
+
+  student User   @relation(fields: [studentId], references: [id])
+  course  Course @relation(fields: [courseId], references: [id])
+
+  @@map("attendances")
+}
+
+model QRSession {
+  id        String   @id @default(uuid())
+  courseId  String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@map("qr_sessions")
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+  PARENT
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  ABSENT
+  INVALID_LOCATION
+}

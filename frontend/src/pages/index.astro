@@ -1,0 +1,64 @@
+---
+import Button from "~/components/ui/button";
+import Checkbox from "~/components/ui/checkbox";
+import Input from "~/components/ui/input";
+import Label from "~/components/ui/label";
+import Layout from "~/layouts/Layout.astro";
+---
+
+<Layout title="Login - QR Attendance System">
+  <main class="m-auto">
+    <section class="w-full max-w-md p-8 rounded-md border shadow-">
+      <h1 class="text-3xl font-bold mb-4 text-center">Login</h1>
+      <form class="max-w-sm mx-auto">
+        <div class="mb-4">
+          <Label size="md" for="email">
+            Email
+            <Input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="Enter your email"
+            />
+          </Label>
+          <div class="mb-6 mt-4">
+            <Label size="md" for="password">
+              Password
+              <Input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Enter your password"
+              />
+            </Label>
+          </div>
+          <div>
+            <Label for="remember" size="md" class="inline-flex items-center">
+              <Checkbox name="remember" id="remember" />
+              <span class="ml-1.5">Remember me</span>
+            </Label>
+          </div>
+          <div class="flex items-center justify-end">
+            <Button type="submit">Login</Button>
+          </div>
+        </div>
+      </form>
+      <div class="mt-4 flex justify-around">
+        <a
+          href="/forgot-password"
+          class="text-sm text-blue-500 hover:underline"
+        >
+          Forgot password?
+        </a>
+        <a href="/register" class="text-sm text-blue-500 hover:underline">
+          Don't have an account?
+        </a>
+      </div>
+    </section>
+    <footer class="p-4 h-24 inline-flex items-center justify-center">
+      <p class="text-sm text-muted-foreground">
+        &copy; 2026 QR Attendance System. All rights reserved.
+      </p>
+    </footer>
+  </main>
+</Layout>

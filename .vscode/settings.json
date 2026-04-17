@@ -1,0 +1,26 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit",
+    "source.sortMembers": "explicit"
+  },
+  "files.associations": {
+    "**/*.module.ts": "typescript",
+    "**/*.controller.ts": "typescript",
+    "**/*.service.ts": "typescript",
+    "**/*.repository.ts": "typescript",
+    "**/*.decorator.ts": "typescript",
+    "**/*.guard.ts": "typescript",
+    "**/*.interceptor.ts": "typescript",
+    "**/*.pipe.ts": "typescript",
+    "**/*.resolver.ts": "typescript",
+    "**/*.gateway.ts": "typescript",
+    "**/*.filter.ts": "typescript",
+    "**/*.middleware.ts": "typescript",
+    "**/*.dto.ts": "typescript",
+    "**/*.entity.ts": "typescript",
+    "**/*.enum.ts": "typescript",
+    "**/*.interface.ts": "typescript",
+  },
+  "json.validate.enable": false
+}
