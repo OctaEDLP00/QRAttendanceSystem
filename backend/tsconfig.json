@@ -20,9 +20,10 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "types": [ "node" ],
+    "types": [ "node", "express" ],
     "paths": {
-      "~/*": [ "./src/*" ]
+      "~/*": [ "./src/*" ],
+      "@/*": [ "./*" ]
     }
   }
 }

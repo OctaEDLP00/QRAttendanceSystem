@@ -1,27 +1,16 @@
 # Frontend Dockerfile
-FROM node:23-alpine
-
-# Set working directory
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-COPY pnpm-lock.yaml ./
-
-# Install pnpm
+FROM node:25-alpine
 RUN npm install -g pnpm
-
-# Install dependencies
-RUN pnpm install --frozen-lockfile
-
-# Copy source code
-COPY . .
-
-# Build the application
+WORKDIR /app
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY frontend/package.json ./frontend/
+RUN pnpm install --filter frontend... --frozen-lockfile
+COPY frontend/ ./frontend/
+WORKDIR /app/frontend
+RUN addgroup -g 1001 -S nodejs \
+    adduser -S nodejs -u 1001 \
+    chown -R nodejs:nodejs /app
+USER nodejs
 RUN pnpm build
-
-# Expose port
 EXPOSE 4321
-
-# Start the application
 CMD ["pnpm", "preview"]

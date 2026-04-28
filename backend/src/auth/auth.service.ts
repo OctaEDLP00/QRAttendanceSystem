@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 
 @Injectable()
 export class AuthService {
@@ -7,7 +7,7 @@ export class AuthService {
     return {
       accessToken: randomUUID(),
       refreshToken: randomUUID(),
-      expiresIn: 900,
+      expiresIn: 60 * 60 * 24,
       user: { email },
     };
   }

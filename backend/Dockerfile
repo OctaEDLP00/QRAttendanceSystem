@@ -1,27 +1,16 @@
 # Backend Dockerfile
-FROM node:23-alpine
-
-# Set working directory
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-COPY pnpm-lock.yaml ./
-
-# Install pnpm
+FROM node:25-alpine
 RUN npm install -g pnpm
-
-# Install dependencies
-RUN pnpm install --frozen-lockfile
-
-# Copy source code
-COPY . .
-
-# Build the application
+WORKDIR /app
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY backend/package.json ./backend/
+RUN pnpm install --filter backend... --frozen-lockfile
+COPY backend/ ./backend/
+WORKDIR /app/backend
+RUN addgroup -g 1001 -S nodejs \
+    adduser -S nodejs -u 1001 \
+    chown -R nodejs:nodejs /app
+USER nodejs
 RUN pnpm build
-
-# Expose port
 EXPOSE 3000
-
-# Start the application
 CMD ["pnpm", "start:prod"]
