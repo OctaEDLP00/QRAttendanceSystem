@@ -17,26 +17,23 @@ services:
 
   backend:
     build:
-      context: . # Sube el contexto a la raíz del monorepo
+      context: .
       dockerfile: ./backend/Dockerfile
     container_name: qr-attendance-backend
     ports:
       - "3000:3000"
     environment:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/qr_attendance
-      NODE_ENV: development
+      NODE_ENV: production
     depends_on:
       - postgres
     networks:
       - qr-attendance-network
     restart: unless-stopped
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
 
   frontend:
     build:
-      context: . # Sube el contexto a la raíz del monorepo
+      context: .
       dockerfile: ./frontend/Dockerfile
     container_name: qr-attendance-frontend
     ports:

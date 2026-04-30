@@ -1,0 +1,15 @@
+.git
+.gitignore
+.github
+.vscode
+.idea
+.DS_Store
+.env
+.env.local
+*.log
+*.swp
+*.swo
+.AppleDouble
+.LSOverride
+mobile
+_qras-collection

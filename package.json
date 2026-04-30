@@ -22,8 +22,15 @@
     "db:studio": "pnpm --filter backend db:studio",
     "db:seed": "pnpm --filter backend db:seed",
     "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down"
+    "docker:down": "docker-compose down",
+    "docker:build": "docker-compose build",
+    "docker:logs": "docker-compose logs"
   },
+  "workspaces": [
+    "./backend",
+    "./frontend",
+    "./mobile"
+  ],
   "devDependencies": {
     "typescript": "6.0.2"
   }
