@@ -1,64 +1,167 @@
 ---
+import Layout from "~/layouts/Layout.astro";
 import Button from "~/components/ui/button";
 import Checkbox from "~/components/ui/checkbox";
 import Input from "~/components/ui/input";
 import Label from "~/components/ui/label";
-import Layout from "~/layouts/Layout.astro";
+
+const description =
+  "Sign in to your QR Attendance account. Access your dashboard to manage courses, track attendance, and generate QR codes.";
 ---
 
-<Layout title="Login - QR Attendance System">
-  <main class="m-auto">
-    <section class="w-full max-w-md p-8 rounded-md border shadow-">
-      <h1 class="text-3xl font-bold mb-4 text-center">Login</h1>
-      <form class="max-w-sm mx-auto">
-        <div class="mb-4">
-          <Label size="md" for="email">
-            Email
-            <Input
-              type="email"
-              id="email"
-              name="email"
-              placeholder="Enter your email"
-            />
-          </Label>
-          <div class="mb-6 mt-4">
-            <Label size="md" for="password">
-              Password
-              <Input
-                type="password"
-                id="password"
-                name="password"
-                placeholder="Enter your password"
-              />
-            </Label>
-          </div>
-          <div>
-            <Label for="remember" size="md" class="inline-flex items-center">
-              <Checkbox name="remember" id="remember" />
-              <span class="ml-1.5">Remember me</span>
-            </Label>
-          </div>
-          <div class="flex items-center justify-end">
-            <Button type="submit">Login</Button>
-          </div>
-        </div>
-      </form>
-      <div class="mt-4 flex justify-around">
-        <a
-          href="/forgot-password"
-          class="text-sm text-blue-500 hover:underline"
+<Layout title="Login - QR Attendance System" description={description}>
+  <main
+    class="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 px-4"
+  >
+    <section
+      class="w-full max-w-md p-8 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg"
+      aria-labelledby="login-heading"
+    >
+      <div class="text-center mb-8">
+        <h1
+          id="login-heading"
+          class="text-3xl font-bold text-slate-900 dark:text-white"
         >
-          Forgot password?
-        </a>
-        <a href="/register" class="text-sm text-blue-500 hover:underline">
-          Don't have an account?
-        </a>
+          QR Attendance
+        </h1>
+        <p class="text-slate-500 dark:text-slate-400 mt-2">
+          Sign in to your account
+        </p>
       </div>
+
+      <form id="loginForm" class="space-y-6" aria-label="Login form">
+        <div>
+          <Label
+            size="sm"
+            for="email"
+            class="text-slate-700 dark:text-slate-300"
+          >
+            Email
+          </Label>
+          <Input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="Enter your email"
+            required
+            class="mt-1.5"
+            aria-describedby="email-error"
+          />
+        </div>
+
+        <div>
+          <Label
+            size="sm"
+            for="password"
+            class="text-slate-700 dark:text-slate-300"
+          >
+            Password
+          </Label>
+          <Input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Enter your password"
+            required
+            class="mt-1.5"
+            aria-describedby="password-error"
+          />
+        </div>
+
+        <div class="flex items-center justify-between">
+          <Label
+            for="remember"
+            size="sm"
+            class="inline-flex items-center text-slate-700 dark:text-slate-300"
+          >
+            <Checkbox name="remember" id="remember" />
+            <span class="ml-2">Remember me</span>
+          </Label>
+        </div>
+
+        <div
+          id="errorMessage"
+          class="hidden p-3 text-sm text-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800"
+          role="alert"
+          aria-live="polite"
+        >
+        </div>
+
+        <Button type="submit" class="w-full">Sign In</Button>
+      </form>
+
+      <nav class="mt-6 text-center" aria-label="Authentication navigation">
+        <a
+          href="/register"
+          class="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+        >
+          Don't have an account? Sign up
+        </a>
+      </nav>
     </section>
-    <footer class="p-4 h-24 inline-flex items-center justify-center">
-      <p class="text-sm text-muted-foreground">
-        &copy; 2026 QR Attendance System. All rights reserved.
-      </p>
-    </footer>
   </main>
 </Layout>
+
+<script>
+  import { navigate } from "~/lib/navigation";
+  const $form = document.querySelector("#loginForm") as HTMLFormElement;
+  const $error = document.querySelector("#errorMessage") as HTMLDivElement;
+
+  async function login({ email, password }: { [key: string]: string }) {
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+        mode: "cors",
+      });
+      return response;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  function getFormData(form: HTMLFormElement) {
+    const formData = new FormData(form);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const remember = formData.get("remember") === "on";
+    return { email, password, remember };
+  }
+
+  async function handleEvent(e: SubmitEvent) {
+    e.preventDefault();
+
+    const { email, password, remember } = getFormData($form);
+
+    if ($error) {
+      $error.classList.add("hidden");
+      $error.textContent = "";
+    }
+
+    const response = await login({ email, password });
+    const data = await response.json();
+
+    if (response.ok && data.accessToken) {
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem(
+        "tokenExpiry",
+        (Date.now() + data.expiresIn * 1000).toString(),
+      );
+      if (remember) {
+        localStorage.setItem("rememberMe", "true");
+      }
+      navigate("/dashboard");
+    } else {
+      if ($error) {
+        $error.classList.remove("hidden");
+        $error.textContent = data.error || "Login failed";
+      }
+    }
+  }
+
+  $form?.addEventListener("submit", handleEvent);
+</script>

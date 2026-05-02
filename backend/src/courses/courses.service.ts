@@ -1,38 +1,47 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { randomUUID } from 'crypto';
-import type { Course } from '../../types/index';
+import type { Course, Institution, User } from '../generated/prisma/client.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
 @Injectable()
 export class CoursesService {
-  private courses: Course[] = [];
+  constructor(private prisma: PrismaService) { }
 
-  listCourses(): Course[] {
-    return this.courses;
+  async listCourses(): Promise<
+    (Course & { teacher: User; institution: Institution })[]
+  > {
+    return this.prisma.course.findMany({
+      include: { teacher: true, institution: true },
+    });
   }
 
-  listCoursesByTeacher(teacherId: string): Course[] {
-    return this.courses.filter(course => course.teacherId === teacherId);
+  async listCoursesByTeacher(teacherId: string): Promise<Course[]> {
+    return this.prisma.course.findMany({
+      where: { teacherId },
+    });
   }
 
-  listCoursesByInstitutionIds(institutionIds: string[]): Course[] {
-    return this.courses.filter(course => institutionIds.includes(course.institutionId));
+  async listCoursesByInstitutionIds(
+    institutionIds: string[],
+  ): Promise<Course[]> {
+    return this.prisma.course.findMany({
+      where: { institutionId: { in: institutionIds } },
+    });
   }
 
-  createCourse(name: string, teacherId: string, institutionId: string): Course {
-    const course: Course = {
-      id: randomUUID(),
-      name,
-      teacherId,
-      institutionId,
-      createdAt: new Date(),
-    };
-
-    this.courses.push(course);
-    return course;
+  async createCourse(
+    name: string,
+    teacherId: string,
+    institutionId: string,
+  ): Promise<Course> {
+    return this.prisma.course.create({
+      data: { name, teacherId, institutionId },
+    });
   }
 
-  getCourse(id: string): Course {
-    const course = this.courses.find(item => item.id === id);
+  async getCourse(id: string): Promise<Course> {
+    const course = await this.prisma.course.findUnique({
+      where: { id },
+    });
     if (!course) {
       throw new NotFoundException('Course not found');
     }

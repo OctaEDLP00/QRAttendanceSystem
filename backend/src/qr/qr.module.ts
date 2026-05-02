@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { QrController } from './qr.controller';
-import { QrService } from './qr.service';
+import { QrController } from './qr.controller.js';
+import { QrService } from './qr.service.js';
 
 @Module({
   imports: [],

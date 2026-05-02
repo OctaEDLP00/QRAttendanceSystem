@@ -1,9 +1,11 @@
 generator client {
-  provider = "prisma-client-js"
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 model Institution {
@@ -21,12 +23,12 @@ model User {
   id            String   @id @default(uuid())
   name          String
   email         String   @unique
-  password      String
-  role          Role
-  institutionId String
-  createdAt     DateTime @default(now())
+  password     String?
+  role         Role
+  institutionId String?
+  createdAt    DateTime @default(now())
 
-  institution Institution  @relation(fields: [institutionId], references: [id])
+  institution Institution? @relation(fields: [institutionId], references: [id])
   attendances Attendance[]
   courses     Course[]     @relation("TeacherCourses")
 
@@ -66,6 +68,7 @@ model Attendance {
 model QRSession {
   id        String   @id @default(uuid())
   courseId  String
+  studentId String?
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())

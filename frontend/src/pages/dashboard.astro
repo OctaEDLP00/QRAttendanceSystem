@@ -1,0 +1,402 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import Button from "~/components/ui/button";
+
+const description =
+  "Dashboard for QR Attendance System. Manage courses, track attendance, and generate QR codes based on your role.";
+---
+
+<Layout title="Dashboard - QR Attendance System" description={description}>
+  <div
+    id="authCheck"
+    class="min-h-screen flex items-center justify-center"
+    role="status"
+  >
+    <div
+      class="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"
+    >
+    </div>
+  </div>
+
+  <div id="dashboard" class="hidden min-h-screen bg-slate-50 dark:bg-slate-900">
+    <header
+      class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10"
+    >
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center gap-4">
+            <h1 class="text-xl font-bold text-slate-900 dark:text-white">
+              QR Attendance
+            </h1>
+            <span
+              id="userRole"
+              class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+            ></span>
+          </div>
+          <div class="flex items-center gap-4">
+            <span
+              id="userName"
+              class="text-sm text-slate-600 dark:text-slate-300"></span>
+            <Button id="logoutBtn" variant="outline" size="sm">Logout</Button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" role="main">
+      <!-- Admin Dashboard -->
+      <section
+        id="adminDashboard"
+        class="hidden"
+        aria-labelledby="admin-heading"
+      >
+        <h2
+          id="admin-heading"
+          class="text-2xl font-bold text-slate-900 dark:text-white mb-6"
+        >
+          Admin Dashboard
+        </h2>
+        <div
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          role="region"
+        >
+          <div
+            class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
+          >
+            <div class="text-3xl font-bold text-blue-600" id="totalUsers">
+              -
+            </div>
+            <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Total Users
+            </div>
+          </div>
+          <div
+            class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
+          >
+            <div class="text-3xl font-bold text-green-600" id="totalCourses">
+              -
+            </div>
+            <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Total Courses
+            </div>
+          </div>
+          <div
+            class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
+          >
+            <div
+              class="text-3xl font-bold text-purple-600"
+              id="totalInstitutions"
+            >
+              -
+            </div>
+            <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Institutions
+            </div>
+          </div>
+          <div
+            class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
+          >
+            <div
+              class="text-3xl font-bold text-orange-600"
+              id="todayAttendance"
+            >
+              -
+            </div>
+            <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Today's Attendance
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div
+            class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
+          >
+            <h3
+              class="text-lg font-semibold text-slate-900 dark:text-white mb-4"
+            >
+              Recent Users
+            </h3>
+            <div id="recentUsers" class="space-y-3"></div>
+          </div>
+          <div
+            class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
+          >
+            <h3
+              class="text-lg font-semibold text-slate-900 dark:text-white mb-4"
+            >
+              Quick Actions
+            </h3>
+            <nav class="space-y-3">
+              <a
+                href="/courses"
+                class="block p-3 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700"
+              >
+                <span class="font-medium text-slate-900 dark:text-white"
+                  >Manage Courses</span
+                >
+              </a>
+              <a
+                href="/attendance"
+                class="block p-3 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700"
+              >
+                <span class="font-medium text-slate-900 dark:text-white"
+                  >View Attendance</span
+                >
+              </a>
+            </nav>
+          </div>
+        </div>
+      </section>
+
+      <!-- Teacher Dashboard -->
+      <section
+        id="teacherDashboard"
+        class="hidden"
+        aria-labelledby="teacher-heading"
+      >
+        <h2
+          id="teacher-heading"
+          class="text-2xl font-bold text-slate-900 dark:text-white mb-6"
+        >
+          Teacher Dashboard
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div
+            class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
+          >
+            <div class="text-3xl font-bold text-blue-600" id="myCourses">-</div>
+            <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              My Courses
+            </div>
+          </div>
+          <div
+            class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
+          >
+            <div class="text-3xl font-bold text-green-600" id="activeSessions">
+              -
+            </div>
+            <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Active QR Sessions
+            </div>
+          </div>
+          <div
+            class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
+          >
+            <div class="text-3xl font-bold text-purple-600" id="attendanceRate">
+              -
+            </div>
+            <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Attendance Rate
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
+        >
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+            My Courses
+          </h3>
+          <div id="teacherCourses" class="space-y-3"></div>
+        </div>
+
+        <div
+          class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm mt-6"
+        >
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+            Generate QR Code
+          </h3>
+          <div class="flex gap-4">
+            <select
+              id="courseSelect"
+              class="flex-1 px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100"
+            >
+              <option value="">Select a course</option>
+            </select>
+            <Button id="generateQR">Generate QR</Button>
+          </div>
+          <div id="qrResult" class="mt-4 hidden">
+            <div
+              class="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800"
+            >
+              <p class="text-sm text-green-700 dark:text-green-300 font-medium">
+                QR Session Created!
+              </p>
+              <p class="text-xs text-green-600 dark:text-green-400 mt-1">
+                Token: <span id="qrToken"></span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Student Dashboard -->
+      <section
+        id="studentDashboard"
+        class="hidden"
+        aria-labelledby="student-heading"
+      >
+        <h2
+          id="student-heading"
+          class="text-2xl font-bold text-slate-900 dark:text-white mb-6"
+        >
+          Student Dashboard
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div
+            class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
+          >
+            <div class="text-3xl font-bold text-blue-600" id="enrolledCourses">
+              -
+            </div>
+            <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Enrolled Courses
+            </div>
+          </div>
+          <div
+            class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
+          >
+            <div
+              class="text-3xl font-bold text-green-600"
+              id="attendancePercentage"
+            >
+              -
+            </div>
+            <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Attendance Rate
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Parent Dashboard -->
+      <section
+        id="parentDashboard"
+        class="hidden"
+        aria-labelledby="parent-heading"
+      >
+        <h2
+          id="parent-heading"
+          class="text-2xl font-bold text-slate-900 dark:text-white mb-6"
+        >
+          Parent Dashboard
+        </h2>
+        <div
+          class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
+        >
+          <p class="text-slate-500 dark:text-slate-400">
+            View your children's attendance records
+          </p>
+        </div>
+      </section>
+    </main>
+  </div>
+</Layout>
+
+<script>
+  import { navigate } from "~/lib/navigation";
+  const $authCheck = document.querySelector("#authCheck") as HTMLDivElement;
+  const $dashboard = document.querySelector("#dashboard") as HTMLDivElement;
+  const $userName = document.querySelector("#userName") as HTMLSpanElement;
+  const $userRole = document.querySelector("#userRole") as HTMLSpanElement;
+  const $logoutBtn = document.querySelector("#logoutBtn") as HTMLButtonElement;
+
+  function checkAuth() {
+    const token = localStorage.getItem("accessToken");
+    const userStr = localStorage.getItem("user");
+    if (!token || !userStr) {
+      navigate("/");
+      return null;
+    }
+    try {
+      return JSON.parse(userStr);
+    } catch {
+      navigate("/");
+      return null;
+    }
+  }
+
+  function showDashboard(role: string) {
+    $authCheck?.classList.add("hidden");
+    $dashboard?.classList.remove("hidden");
+
+    document.querySelector("#adminDashboard")?.classList.add("hidden");
+    document.querySelector("#teacherDashboard")?.classList.add("hidden");
+    document.querySelector("#studentDashboard")?.classList.add("hidden");
+    document.querySelector("#parentDashboard")?.classList.add("hidden");
+
+    const $el = document.querySelector(`#${role.toLowerCase()}Dashboard`);
+    $el?.classList.remove("hidden");
+  }
+
+  async function loadAdminData(token: string) {
+    const [usersRes, coursesRes, institutionsRes] = await Promise.all([
+      fetch("/api/users", { headers: { Authorization: `Bearer ${token}` } }),
+      fetch("/api/courses", { headers: { Authorization: `Bearer ${token}` } }),
+      fetch("/api/institutions", {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+    ]);
+
+    const users = await usersRes.json();
+    const courses = await coursesRes.json();
+    const institutions = await institutionsRes.json();
+
+    if (Array.isArray(users)) {
+      document.querySelector("#totalUsers")!.textContent =
+        users.length.toString();
+    }
+    if (Array.isArray(courses)) {
+      document.querySelector("#totalCourses")!.textContent =
+        courses.length.toString();
+    }
+    if (Array.isArray(institutions)) {
+      document.querySelector("#totalInstitutions")!.textContent =
+        institutions.length.toString();
+    }
+  }
+
+  async function loadTeacherData(token: string, userId: string) {
+    const coursesRes = await fetch("/api/courses", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const courses = await coursesRes.json();
+
+    if (Array.isArray(courses)) {
+      const myCourses = courses.filter((c: any) => c.teacherId === userId);
+      document.querySelector("#myCourses")!.textContent =
+        myCourses.length.toString();
+
+      const $select = document.querySelector(
+        "#courseSelect",
+      ) as HTMLSelectElement;
+      myCourses.forEach((course: any) => {
+        const option = document.createElement("option");
+        option.value = course.id;
+        option.textContent = course.name;
+        $select.appendChild(option);
+      });
+    }
+  }
+
+  $logoutBtn?.addEventListener("click", () => {
+    localStorage.clear();
+    navigate("/");
+  });
+
+  const user = checkAuth();
+  if (user) {
+    $userName.textContent = user.name;
+    $userRole.textContent = user.role;
+    showDashboard(user.role);
+
+    const token = localStorage.getItem("accessToken")!;
+
+    if (user.role === "ADMIN") {
+      loadAdminData(token);
+    } else if (user.role === "TEACHER") {
+      loadTeacherData(token, user.id);
+    }
+  }
+</script>

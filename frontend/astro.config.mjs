@@ -18,5 +18,5 @@ export default defineConfig({
       cssVariable: "--font-inter"
     }
   ],
-  output: "server"
+  output: "server",
 });

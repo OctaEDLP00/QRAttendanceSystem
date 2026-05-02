@@ -5,14 +5,18 @@ RUN npm install -g pnpm
 
 WORKDIR /app
 
-# Copy pnpm workspace files from root
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml /app/
+# Copy workspace configuration files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-# Copy all source files without specific paths
-COPY . /app/
+# Copy backend package.json for caching
+COPY backend/package.json ./backend/package.json
+COPY frontend/package.json ./frontend/package.json
 
-# Install backend dependencies only
-RUN cd /app && pnpm install --filter backend --frozen-lockfile && pnpm prune --production
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy backend source code
+COPY backend/ ./backend/
 
 # Build backend
 WORKDIR /app/backend

@@ -1,0 +1,263 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import Button from "~/components/ui/button";
+
+const description =
+  "View and manage attendance records in the QR Attendance System. Track student attendance across all courses.";
+---
+
+<Layout title="Attendance - QR Attendance System" description={description}>
+  <div
+    id="authCheck"
+    class="min-h-screen flex items-center justify-center"
+    role="status"
+  >
+    <div
+      class="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"
+    >
+    </div>
+  </div>
+
+  <div id="app" class="hidden min-h-screen bg-slate-50 dark:bg-slate-900">
+    <header
+      class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10"
+    >
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center gap-4">
+            <a
+              href="/dashboard"
+              class="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+              >← Back</a
+            >
+            <h1 class="text-xl font-bold text-slate-900 dark:text-white">
+              Attendance
+            </h1>
+          </div>
+          <div class="flex items-center gap-4">
+            <span
+              id="userInfo"
+              class="text-sm text-slate-600 dark:text-slate-300"></span>
+            <Button id="logoutBtn" variant="outline" size="sm">Logout</Button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div
+        class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 mb-6"
+      >
+        <div class="flex flex-wrap gap-4 items-end">
+          <div class="flex-1 min-w-50">
+            <label
+              for="courseFilter"
+              class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+              >Filter by Course</label
+            >
+            <select
+              id="courseFilter"
+              class="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100"
+            >
+              <option value="">All Courses</option>
+            </select>
+          </div>
+          <Button id="refreshBtn" variant="outline">Refresh</Button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div
+          class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700"
+        >
+          <div class="text-2xl font-bold text-green-600" id="presentCount">
+            0
+          </div>
+          <div class="text-sm text-slate-500 dark:text-slate-400">Present</div>
+        </div>
+        <div
+          class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700"
+        >
+          <div class="text-2xl font-bold text-yellow-600" id="lateCount">0</div>
+          <div class="text-sm text-slate-500 dark:text-slate-400">Late</div>
+        </div>
+        <div
+          class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700"
+        >
+          <div class="text-2xl font-bold text-red-600" id="absentCount">0</div>
+          <div class="text-sm text-slate-500 dark:text-slate-400">Absent</div>
+        </div>
+        <div
+          class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700"
+        >
+          <div class="text-2xl font-bold text-blue-600" id="totalCount">0</div>
+          <div class="text-sm text-slate-500 dark:text-slate-400">Total</div>
+        </div>
+      </div>
+
+      <div
+        class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden"
+      >
+        <table class="w-full" role="table">
+          <thead class="bg-slate-50 dark:bg-slate-700/50">
+            <tr>
+              <th
+                class="px-4 py-3 text-left text-sm font-medium text-slate-600 dark:text-slate-300"
+                >Student</th
+              >
+              <th
+                class="px-4 py-3 text-left text-sm font-medium text-slate-600 dark:text-slate-300"
+                >Course</th
+              >
+              <th
+                class="px-4 py-3 text-left text-sm font-medium text-slate-600 dark:text-slate-300"
+                >Status</th
+              >
+              <th
+                class="px-4 py-3 text-left text-sm font-medium text-slate-600 dark:text-slate-300"
+                >Time</th
+              >
+            </tr>
+          </thead>
+          <tbody
+            id="attendanceTable"
+            class="divide-y divide-slate-200 dark:divide-slate-700"
+          >
+            <tr
+              ><td
+                colspan="4"
+                class="px-4 py-8 text-center text-slate-500 dark:text-slate-400"
+                >Loading attendance...</td
+              ></tr
+            >
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</Layout>
+
+<script>
+  import { navigate } from "~/lib/navigation";
+  const $authCheck = document.querySelector("#authCheck") as HTMLDivElement;
+  const $app = document.querySelector("#app") as HTMLDivElement;
+  const $logoutBtn = document.querySelector("#logoutBtn") as HTMLButtonElement;
+  const $attendanceTable = document.querySelector(
+    "#attendanceTable",
+  ) as HTMLTableSectionElement;
+  const $courseFilter = document.querySelector(
+    "#courseFilter",
+  ) as HTMLSelectElement;
+  const $refreshBtn = document.querySelector(
+    "#refreshBtn",
+  ) as HTMLButtonElement;
+
+  let allAttendance: any[] = [];
+  let allCourses: any[] = [];
+
+  function checkAuth() {
+    const token = localStorage.getItem("accessToken");
+    const userStr = localStorage.getItem("user");
+    if (!token || !userStr) {
+      navigate("/");
+      return null;
+    }
+    try {
+      return JSON.parse(userStr);
+    } catch {
+      navigate("/");
+      return null;
+    }
+  }
+
+  async function loadData(token: string) {
+    const [attendanceRes, coursesRes] = await Promise.all([
+      fetch("/api/attendance", {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      fetch("/api/courses", { headers: { Authorization: `Bearer ${token}` } }),
+    ]);
+
+    allAttendance = await attendanceRes.json();
+    allCourses = await coursesRes.json();
+
+    if (Array.isArray(allCourses)) {
+      allCourses.forEach((course: any) => {
+        const option = document.createElement("option");
+        option.value = course.id;
+        option.textContent = course.name;
+        $courseFilter.appendChild(option);
+      });
+    }
+
+    renderAttendance(allAttendance);
+  }
+
+  function renderAttendance(records: any[]) {
+    const present = records.filter((r) => r.status === "PRESENT").length;
+    const late = records.filter((r) => r.status === "LATE").length;
+    const absent = records.filter((r) => r.status === "ABSENT").length;
+
+    document.querySelector("#presentCount")!.textContent = present.toString();
+    document.querySelector("#lateCount")!.textContent = late.toString();
+    document.querySelector("#absentCount")!.textContent = absent.toString();
+    document.querySelector("#totalCount")!.textContent =
+      records.length.toString();
+
+    if (records.length === 0) {
+      $attendanceTable.innerHTML =
+        '<tr><td colspan="4" class="px-4 py-8 text-center text-slate-500 dark:text-slate-400">No attendance records found</td></tr>';
+      return;
+    }
+
+    const statusColors: Record<string, string> = {
+      PRESENT: "bg-green-100 text-green-700",
+      LATE: "bg-yellow-100 text-yellow-700",
+      ABSENT: "bg-red-100 text-red-700",
+      INVALID_LOCATION: "bg-gray-100 text-gray-700",
+    };
+
+    $attendanceTable.innerHTML = records
+      .map((record: any) => {
+        const course = allCourses.find((c) => c.id === record.courseId);
+        const time = new Date(record.timestamp).toLocaleString();
+        return `
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+          <td class="px-4 py-3 text-sm text-slate-900 dark:text-slate-100">${record.studentId?.slice(0, 8) || "N/A"}...</td>
+          <td class="px-4 py-3 text-sm text-slate-900 dark:text-slate-100">${course?.name || "Unknown"}</td>
+          <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium rounded-full ${statusColors[record.status]}">${record.status}</span></td>
+          <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">${time}</td>
+        </tr>
+      `;
+      })
+      .join("");
+  }
+
+  $courseFilter?.addEventListener("change", () => {
+    const courseId = $courseFilter.value;
+    const filtered = courseId
+      ? allAttendance.filter((r) => r.courseId === courseId)
+      : allAttendance;
+    renderAttendance(filtered);
+  });
+
+  $refreshBtn?.addEventListener("click", () => {
+    const token = localStorage.getItem("accessToken")!;
+    loadData(token);
+  });
+
+  $logoutBtn?.addEventListener("click", () => {
+    localStorage.clear();
+    navigate("/");
+  });
+
+  const user = checkAuth();
+  if (user) {
+    document.querySelector("#userInfo")!.textContent = user.name;
+    $authCheck?.classList.add("hidden");
+    $app?.classList.remove("hidden");
+
+    const token = localStorage.getItem("accessToken")!;
+    loadData(token);
+  }
+</script>

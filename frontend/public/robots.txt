@@ -1,0 +1,11 @@
+# Robots.txt for QR Attendance System
+
+User-agent: *
+Allow: /
+
+# Block private/admin areas
+Disallow: /dashboard
+Disallow: /api/
+
+# Sitemap
+Sitemap: http://localhost:4321/sitemap.xml

@@ -1,44 +1,42 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { randomUUID } from 'crypto';
-import type { Role, User } from '../../types/index';
+import type { Role, User } from '../generated/prisma/client.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
 @Injectable()
 export class UsersService {
-  private users: User[] = [];
+  constructor(private prisma: PrismaService) { }
 
-  listUsers(): User[] {
-    return this.users;
+  async listUsers(): Promise<User[]> {
+    return this.prisma.user.findMany();
   }
 
-  createUser(
+  async createUser(
     name: string,
     email: string,
     role: Role,
     institutionId?: string,
-    institutionIds: string[] = [],
-  ): User {
-    const user: User = {
-      id: randomUUID(),
-      name,
-      email,
-      role,
-      institutionId,
-      institutionIds,
-      createdAt: new Date(),
-    };
-
-    this.users.push(user);
-    return user;
+  ): Promise<User> {
+    return this.prisma.user.create({
+      data: { name, email, role, institutionId: institutionId ?? null },
+    });
   }
 
-  assignInstitution(userId: string, institutionId: string): User {
-    const user = this.getUser(userId);
-    user.institutionIds = Array.from(new Set([...(user.institutionIds ?? []), institutionId]));
-    return user;
+  async assignInstitution(
+    userId: string,
+    institutionId: string,
+  ): Promise<User> {
+    await this.getUser(userId);
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { institutionId },
+    });
   }
 
-  getUser(id: string): User {
-    const user = this.users.find(item => item.id === id);
+  async getUser(id: string): Promise<User> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+    });
     if (!user) {
       throw new NotFoundException('User not found');
     }

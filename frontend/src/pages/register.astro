@@ -1,8 +1,198 @@
 ---
 import Layout from "~/layouts/Layout.astro";
+import Button from "~/components/ui/button";
+import Input from "~/components/ui/input";
+import Label from "~/components/ui/label";
+
+const description =
+  "Create your QR Attendance account. Choose your role and start managing attendance efficiently.";
 ---
 
-<Layout>
-  <h1>Register Page</h1>
-  <p>Please enter your credentials to log in.</p>
+<Layout title="Register - QR Attendance System" description={description}>
+  <main
+    class="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 px-4"
+  >
+    <section
+      class="w-full max-w-md p-8 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg"
+      aria-labelledby="register-heading"
+    >
+      <div class="text-center mb-8">
+        <h1
+          id="register-heading"
+          class="text-3xl font-bold text-slate-900 dark:text-white"
+        >
+          Create Account
+        </h1>
+        <p class="text-slate-500 dark:text-slate-400 mt-2">
+          Sign up for QR Attendance
+        </p>
+      </div>
+
+      <form id="registerForm" class="space-y-5" aria-label="Registration form">
+        <div>
+          <Label
+            size="sm"
+            for="name"
+            class="text-slate-700 dark:text-slate-300"
+          >
+            Full Name
+          </Label>
+          <Input
+            type="text"
+            id="name"
+            name="name"
+            placeholder="Enter your full name"
+            required
+            class="mt-1.5"
+          />
+        </div>
+
+        <div>
+          <Label
+            size="sm"
+            for="email"
+            class="text-slate-700 dark:text-slate-300"
+          >
+            Email
+          </Label>
+          <Input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="Enter your email"
+            required
+            class="mt-1.5"
+          />
+        </div>
+
+        <div>
+          <Label
+            size="sm"
+            for="password"
+            class="text-slate-700 dark:text-slate-300"
+          >
+            Password
+          </Label>
+          <Input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Create a password (min 6 characters)"
+            required
+            minlength="6"
+            class="mt-1.5"
+          />
+        </div>
+
+        <div>
+          <Label
+            size="sm"
+            for="role"
+            class="text-slate-700 dark:text-slate-300"
+          >
+            Role
+          </Label>
+          <select
+            id="role"
+            name="role"
+            class="mt-1.5 w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          >
+            <option value="STUDENT">Student</option>
+            <option value="TEACHER">Teacher</option>
+            <option value="PARENT">Parent</option>
+            <option value="ADMIN">Admin</option>
+          </select>
+        </div>
+
+        <div
+          id="errorMessage"
+          class="hidden p-3 text-sm text-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800"
+          role="alert"
+          aria-live="polite"
+        >
+        </div>
+
+        <Button type="submit" class="w-full">Create Account</Button>
+      </form>
+
+      <nav class="mt-6 text-center" aria-label="Authentication navigation">
+        <a
+          href="/"
+          class="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+        >
+          Already have an account? Sign in
+        </a>
+      </nav>
+    </section>
+  </main>
 </Layout>
+
+<script>
+  import { navigate } from "~/lib/navigation";
+  const $form = document.querySelector("#registerForm") as HTMLFormElement;
+  const $error = document.querySelector("#errorMessage") as HTMLDivElement;
+
+  async function register({
+    name,
+    email,
+    password,
+    role,
+  }: {
+    [key: string]: string;
+  }) {
+    try {
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password, role }),
+        mode: "cors",
+      });
+      return response;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  function getFormData(form: HTMLFormElement) {
+    const formData = new FormData(form);
+    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const role = formData.get("role") as string;
+    return { name, email, password, role };
+  }
+
+  async function handleEvent(e: SubmitEvent) {
+    e.preventDefault();
+
+    const { name, email, password, role } = getFormData($form);
+
+    if ($error) {
+      $error.classList.add("hidden");
+      $error.textContent = "";
+    }
+
+    const response = await register({ name, email, password, role });
+    const data = await response.json();
+
+    if (response.ok && data.accessToken) {
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem(
+        "tokenExpiry",
+        (Date.now() + data.expiresIn * 1000).toString(),
+      );
+      navigate("/dashboard");
+    } else {
+      if ($error) {
+        $error.classList.remove("hidden");
+        $error.textContent = data.error || "Registration failed";
+      }
+    }
+  }
+
+  $form?.addEventListener("submit", handleEvent);
+</script>

@@ -1,32 +1,31 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import type { Course } from '../../types/index';
-import { CoursesService } from './courses.service';
+import { CoursesService } from './courses.service.js';
 
 @Controller('courses')
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) { }
 
   @Get()
-  listCourses(): Course[] {
+  async listCourses() {
     return this.coursesService.listCourses();
   }
 
   @Get('teacher/:teacherId')
-  listCoursesByTeacher(@Param('teacherId') teacherId: string): Course[] {
+  async listCoursesByTeacher(@Param('teacherId') teacherId: string) {
     return this.coursesService.listCoursesByTeacher(teacherId);
   }
 
   @Post()
-  createCourse(
+  async createCourse(
     @Body('name') name: string,
     @Body('teacherId') teacherId: string,
     @Body('institutionId') institutionId: string,
-  ): Course {
+  ) {
     return this.coursesService.createCourse(name, teacherId, institutionId);
   }
 
   @Get(':id')
-  getCourse(@Param('id') id: string): Course {
+  async getCourse(@Param('id') id: string) {
     return this.coursesService.getCourse(id);
   }
 }

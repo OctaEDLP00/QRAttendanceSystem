@@ -1,7 +1,7 @@
 # File Tree: backend
 
 **Generated:** 4/27/2026, 9:58:12 PM
-**Root Path:** `c:\Users\Octav\OneDrive\Desktop\Dev\qr-attendance-system\backend`
+**Root Path:** `\Desktop\qr-attendance-system\backend`
 
 ```
 ├── 📁 prisma

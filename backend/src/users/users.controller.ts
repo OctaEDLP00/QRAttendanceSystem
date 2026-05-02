@@ -1,60 +1,41 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { CoursesService } from '~/courses/courses.service';
-import type { Role, User } from '../../types/index';
-import { UsersService } from './users.service';
+import type { Role } from '../generated/prisma/client.js';
+import { UsersService } from './users.service.js';
 
 @Controller('users')
 export class UsersController {
-  constructor(
-    private readonly usersService: UsersService,
-    private readonly coursesService: CoursesService,
-  ) { }
+  constructor(private readonly usersService: UsersService) { }
 
   @Get()
-  listUsers(): User[] {
+  async listUsers() {
     return this.usersService.listUsers();
   }
 
   @Post()
-  createUser(
+  async createUser(
     @Body('name') name: string,
     @Body('email') email: string,
     @Body('role') role: string,
-    @Body('institutionId') institutionId: string,
-    @Body('institutionIds') institutionIds: string[] = [],
-  ): User {
+    @Body('institutionId') institutionId?: string,
+  ) {
     return this.usersService.createUser(
       name,
       email,
-      role as unknown as Role,
+      role as Role,
       institutionId,
-      institutionIds,
     );
   }
 
   @Post(':id/institutions')
-  assignInstitution(
+  async assignInstitution(
     @Param('id') id: string,
     @Body('institutionId') institutionId: string,
-  ): User {
+  ) {
     return this.usersService.assignInstitution(id, institutionId);
   }
 
-  @Get(':id/institutions')
-  listUserInstitutions(@Param('id') id: string): string[] {
-    const user = this.usersService.getUser(id);
-    return user.institutionIds ?? (user.institutionId ? [user.institutionId] : []);
-  }
-
-  @Get(':id/courses')
-  listUserCourses(@Param('id') id: string) {
-    const user = this.usersService.getUser(id);
-    const institutionIds = user.institutionIds ?? (user.institutionId ? [user.institutionId] : []);
-    return this.coursesService.listCoursesByInstitutionIds(institutionIds);
-  }
-
   @Get(':id')
-  getUser(@Param('id') id: string): User {
+  async getUser(@Param('id') id: string) {
     return this.usersService.getUser(id);
   }
 }

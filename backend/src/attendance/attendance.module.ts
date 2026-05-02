@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { AttendanceController } from '~/attendance/attendance.controller';
-import { AttendanceService } from '~/attendance/attendance.service';
-import { QrModule } from '~/qr/qr.module';
+import { QrModule } from '../qr/qr.module.js';
+import { AttendanceController } from './attendance.controller.js';
+import { AttendanceService } from './attendance.service.js';
 
 @Module({
   imports: [QrModule],

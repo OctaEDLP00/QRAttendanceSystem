@@ -5,17 +5,22 @@ RUN npm install -g pnpm
 
 WORKDIR /app
 
-# Copy pnpm workspace files from root
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml /app/
+# Copy workspace configuration files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-# Copy all source files without specific paths
-COPY . /app/
+# Copy frontend package.json for caching
+COPY frontend/package.json ./frontend/package.json
+COPY backend/package.json ./backend/package.json
 
-# Install frontend dependencies only
-RUN cd /app && pnpm install --filter frontend --frozen-lockfile && pnpm prune --production
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy frontend source code
+COPY frontend/ ./frontend/
 
 # Build frontend
 WORKDIR /app/frontend
+RUN pnpm dlx astro@latest telemetry disable
 RUN pnpm build
 
 # Create nodejs user
@@ -25,4 +30,6 @@ RUN chown -R nodejs:nodejs /app
 USER nodejs
 
 EXPOSE 4321
-CMD ["pnpm", "preview"]
+ENV HOST=0.0.0.0
+ENV PORT=4321
+CMD ["node", "./dist/server/entry.mjs"]

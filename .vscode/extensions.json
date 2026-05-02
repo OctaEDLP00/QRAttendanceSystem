@@ -6,6 +6,10 @@
     "bierner.markdown-preview-github-styles",
     "yzhang.markdown-all-in-one",
     "bradlc.vscode-tailwindcss",
-    "heybourn.headwind"
+    "heybourn.headwind",
+    "christian-kohler.npm-intellisense",
+    "christian-kohler.path-intellisense",
+    "yoavbls.pretty-ts-errors",
+    "qwtel.sqlite-viewer"
   ]
 }

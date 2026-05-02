@@ -1,6 +1,6 @@
-// frontend/src/types/index.ts - Shared types from backend
+// Shared types for the QR Attendance System
+// Based on Prisma schema models
 
-// Re-export types from backend
 export enum Role {
   ADMIN = 'ADMIN',
   TEACHER = 'TEACHER',
@@ -19,10 +19,16 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  password?: string | null;
   role: Role;
-  institutionId?: string;
-  institutionIds?: string[];
-  createdAt: Date;
+  institutionId?: string | null;
+  createdAt: Date | string;
+}
+
+export interface Institution {
+  id: string;
+  name: string;
+  createdAt: Date | string;
 }
 
 export interface Course {
@@ -30,7 +36,7 @@ export interface Course {
   name: string;
   teacherId: string;
   institutionId: string;
-  createdAt: Date;
+  createdAt: Date | string;
 }
 
 export interface Attendance {
@@ -40,40 +46,74 @@ export interface Attendance {
   status: AttendanceStatus;
   latitude: number;
   longitude: number;
-  timestamp: Date;
-}
-
-export interface Institution {
-  id: string;
-  name: string;
-  createdAt: Date;
+  timestamp: Date | string;
 }
 
 export interface QRSession {
   id: string;
   courseId: string;
-  studentId: string;
+  studentId?: string | null;
   token: string;
-  expiresAt: Date;
-  createdAt: Date;
+  expiresAt: Date | string;
+  createdAt: Date | string;
 }
 
-export interface AuthToken {
+// Auth types
+export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
 }
 
 export interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
   user: User;
-  tokens: AuthToken;
 }
 
+export interface RegisterRequest {
+  name: string;
+  email: string;
+  password: string;
+  role: Role;
+}
+
+// API response types
 export interface ApiError {
-  status: number;
-  message: string;
+  error: string;
+  message?: string;
 }
 
-export type ApiResponse<T> =
-  | { success: true; data: T; status: number }
-  | { success: false; error: ApiError };
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: ApiError;
+}
+
+// Course creation
+export interface CreateCourseRequest {
+  name: string;
+  institutionId: string;
+  teacherId: string;
+}
+
+// Attendance registration
+export interface RegisterAttendanceRequest {
+  studentId: string;
+  courseId: string;
+  latitude: number;
+  longitude: number;
+}
+
+// QR generation
+export interface CreateQRSessionRequest {
+  courseId: string;
+}
+
+export interface ScanQRRequest {
+  qrToken: string;
+  courseId: string;
+  latitude: number;
+  longitude: number;
+}

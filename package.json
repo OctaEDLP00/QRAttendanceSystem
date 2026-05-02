@@ -10,6 +10,7 @@
     "dev": "pnpm --filter frontend dev",
     "dev:backend": "pnpm --filter backend start:dev",
     "start:backend": "pnpm --filter backend start",
+    "start:backend:prod": "pnpm --filter backend start:prod",
     "start:mobile": "pnpm --filter mobile start",
     "test:backend": "pnpm --filter backend test",
     "test:e2e:backend": "pnpm --filter backend test:e2e",
@@ -25,13 +26,5 @@
     "docker:down": "docker-compose down",
     "docker:build": "docker-compose build",
     "docker:logs": "docker-compose logs"
-  },
-  "workspaces": [
-    "./backend",
-    "./frontend",
-    "./mobile"
-  ],
-  "devDependencies": {
-    "typescript": "6.0.2"
   }
 }

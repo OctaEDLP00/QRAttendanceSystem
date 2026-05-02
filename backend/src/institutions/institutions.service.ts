@@ -1,32 +1,31 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { randomUUID } from 'crypto';
-import type { Institution } from '../../types/index';
+import type { Institution } from '../generated/prisma/client.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
 @Injectable()
 export class InstitutionsService {
-  private institutions: Institution[] = [];
+  constructor(private prisma: PrismaService) { }
 
-  listInstitutions(): Institution[] {
-    return this.institutions;
+  async listInstitutions(): Promise<Institution[]> {
+    return this.prisma.institution.findMany();
   }
 
-  getInstitutionsByIds(ids: string[]): Institution[] {
-    return this.institutions.filter(institution => ids.includes(institution.id));
+  async getInstitutionsByIds(ids: string[]): Promise<Institution[]> {
+    return this.prisma.institution.findMany({
+      where: { id: { in: ids } },
+    });
   }
 
-  createInstitution(name: string): Institution {
-    const institution: Institution = {
-      id: randomUUID(),
-      name,
-      createdAt: new Date(),
-    };
-
-    this.institutions.push(institution);
-    return institution;
+  async createInstitution(name: string): Promise<Institution> {
+    return this.prisma.institution.create({
+      data: { name },
+    });
   }
 
-  getInstitution(id: string): Institution {
-    const institution = this.institutions.find(item => item.id === id);
+  async getInstitution(id: string): Promise<Institution> {
+    const institution = await this.prisma.institution.findUnique({
+      where: { id },
+    });
     if (!institution) {
       throw new NotFoundException('Institution not found');
     }

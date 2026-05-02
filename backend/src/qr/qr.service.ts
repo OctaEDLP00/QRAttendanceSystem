@@ -1,95 +1,81 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { randomUUID } from 'crypto';
-import type { QRSession } from '../../types/index';
-
-interface QrSessionInternal extends QRSession {
-  active: boolean;
-}
+import type { QRSession } from '../generated/prisma/client.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
 @Injectable()
 export class QrService {
-  private sessions: QrSessionInternal[] = [];
+  constructor(private prisma: PrismaService) { }
 
-  createSession(courseId: string): QRSession {
-    const session: QrSessionInternal = {
-      id: randomUUID(),
-      courseId,
-      studentId: '',
-      token: randomUUID(),
-      expiresAt: new Date(Date.now() + 60_000),
-      createdAt: new Date(),
-      active: true,
-    };
-
-    this.sessions = this.sessions.map(existing => {
-      if (existing.courseId === courseId && !existing.studentId) {
-        return { ...existing, active: false };
-      }
-      return existing;
+  async createSession(courseId: string): Promise<QRSession> {
+    await this.prisma.qRSession.updateMany({
+      where: { courseId, expiresAt: { gt: new Date() } },
+      data: { expiresAt: new Date() },
     });
 
-    this.sessions.push(session);
-    const { active, ...publicSession } = session;
-    return publicSession;
+    return this.prisma.qRSession.create({
+      data: {
+        courseId,
+        token: crypto.randomUUID(),
+        expiresAt: new Date(Date.now() + 60_000),
+      },
+    });
   }
 
-  createStudentSession(studentId: string, courseId: string): QRSession {
-    const session: QrSessionInternal = {
-      id: randomUUID(),
-      courseId,
-      studentId,
-      token: randomUUID(),
-      expiresAt: new Date(Date.now() + 60_000),
-      createdAt: new Date(),
-      active: true,
-    };
-
-    this.sessions = this.sessions.map(existing => {
-      if (existing.courseId === courseId && existing.studentId === studentId) {
-        return { ...existing, active: false };
-      }
-      return existing;
+  async createStudentSession(
+    studentId: string,
+    courseId: string,
+  ): Promise<QRSession> {
+    await this.prisma.qRSession.updateMany({
+      where: { courseId, studentId, expiresAt: { gt: new Date() } },
+      data: { expiresAt: new Date() },
     });
 
-    this.sessions.push(session);
-    const { active, ...publicSession } = session;
-    return publicSession;
+    return this.prisma.qRSession.create({
+      data: {
+        courseId,
+        studentId,
+        token: crypto.randomUUID(),
+        expiresAt: new Date(Date.now() + 60_000),
+      },
+    });
   }
 
-  getActiveSession(courseId: string): QRSession {
-    const session = this.sessions.find(
-      session => session.courseId === courseId && session.active && session.expiresAt > new Date(),
-    );
+  async getActiveSession(courseId: string): Promise<QRSession> {
+    const session = await this.prisma.qRSession.findFirst({
+      where: {
+        courseId,
+        expiresAt: { gt: new Date() },
+      },
+    });
 
     if (!session) {
       throw new NotFoundException('No active QR session found for this course');
     }
 
-    const { active, ...publicSession } = session;
-    return publicSession;
+    return session;
   }
 
-  getSessionByToken(courseId: string, token: string): QRSession {
-    const session = this.sessions.find(
-      session => session.courseId === courseId && session.token === token && session.active && session.expiresAt > new Date(),
-    );
+  async getSessionByToken(courseId: string, token: string): Promise<QRSession> {
+    const session = await this.prisma.qRSession.findFirst({
+      where: {
+        courseId,
+        token,
+        expiresAt: { gt: new Date() },
+      },
+    });
 
     if (!session) {
       throw new NotFoundException('Invalid or expired QR session');
     }
 
-    const { active, ...publicSession } = session;
-    return publicSession;
+    return session;
   }
 
-  expireSession(id: string) {
-    const session = this.sessions.find(session => session.id === id);
-    if (!session) {
-      throw new NotFoundException('QR session not found');
-    }
-
-    session.active = false;
-    session.expiresAt = new Date();
+  async expireSession(id: string): Promise<{ success: boolean }> {
+    await this.prisma.qRSession.update({
+      where: { id },
+      data: { expiresAt: new Date() },
+    });
     return { success: true };
   }
 }

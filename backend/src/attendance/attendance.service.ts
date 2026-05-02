@@ -1,36 +1,38 @@
 import { Injectable } from '@nestjs/common';
-import { randomUUID } from 'crypto';
-import type { Attendance, AttendanceStatus } from '../../types/index';
+import { type Attendance, AttendanceStatus } from '../generated/prisma/client.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
 @Injectable()
 export class AttendanceService {
-  private attendances: Attendance[] = [];
+  constructor(private prisma: PrismaService) { }
 
-  register(
+  async register(
     studentId: string,
     courseId: string,
     latitude: number,
     longitude: number,
-  ): Attendance {
-    const record: Attendance = {
-      id: randomUUID(),
-      studentId,
-      courseId,
-      latitude,
-      longitude,
-      status: 'PRESENT' as AttendanceStatus,
-      timestamp: new Date(),
-    };
-
-    this.attendances.push(record);
-    return record;
+  ): Promise<Attendance> {
+    return this.prisma.attendance.create({
+      data: {
+        studentId,
+        courseId,
+        latitude,
+        longitude,
+        status: AttendanceStatus.PRESENT,
+      },
+    });
   }
 
-  getCourseAttendance(courseId: string): Attendance[] {
-    return this.attendances.filter(record => record.courseId === courseId);
+  async getCourseAttendance(courseId: string): Promise<Attendance[]> {
+    return this.prisma.attendance.findMany({
+      where: { courseId },
+      include: { student: true },
+    });
   }
 
-  getStudentHistory(studentId: string): Attendance[] {
-    return this.attendances.filter(record => record.studentId === studentId);
+  async getStudentHistory(studentId: string): Promise<Attendance[]> {
+    return this.prisma.attendance.findMany({
+      where: { studentId },
+    });
   }
 }

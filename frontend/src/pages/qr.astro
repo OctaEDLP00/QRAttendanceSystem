@@ -1,0 +1,248 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import Button from "~/components/ui/button";
+
+const description =
+  "Generate and scan QR codes for attendance in the QR Attendance System.";
+---
+
+<Layout title="QR Code - QR Attendance System" description={description}>
+  <div
+    id="authCheck"
+    class="min-h-screen flex items-center justify-center"
+    role="status"
+  >
+    <div
+      class="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"
+    >
+    </div>
+  </div>
+
+  <div id="app" class="hidden min-h-screen bg-slate-50 dark:bg-slate-900">
+    <header
+      class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10"
+    >
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center gap-4">
+            <a
+              href="/dashboard"
+              class="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+              >← Back</a
+            >
+            <h1 class="text-xl font-bold text-slate-900 dark:text-white">
+              QR Generator
+            </h1>
+          </div>
+          <div class="flex items-center gap-4">
+            <span
+              id="userInfo"
+              class="text-sm text-slate-600 dark:text-slate-300"></span>
+            <Button id="logoutBtn" variant="outline" size="sm">Logout</Button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <section
+          class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700"
+        >
+          <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-4">
+            Generate QR Code
+          </h2>
+
+          <div class="space-y-4">
+            <div>
+              <label
+                for="courseSelect"
+                class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                >Select Course</label
+              >
+              <select
+                id="courseSelect"
+                class="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100"
+              >
+                <option value="">Select a course</option>
+              </select>
+            </div>
+
+            <Button id="generateBtn" class="w-full">Generate QR Code</Button>
+          </div>
+
+          <div id="qrDisplay" class="hidden mt-6">
+            <div class="flex flex-col items-center">
+              <div id="qrContainer" class="p-4 bg-white rounded-lg shadow-md">
+              </div>
+              <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">
+                Scan this code with the mobile app
+              </p>
+              <p id="qrToken" class="mt-2 text-xs text-slate-400 font-mono"></p>
+              <p id="qrExpiry" class="mt-1 text-xs text-red-500">
+                Expires in 60 seconds
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700"
+        >
+          <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-4">
+            Scan QR Code
+          </h2>
+
+          <div class="text-center py-8">
+            <div
+              class="w-32 h-32 mx-auto bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center mb-4"
+            >
+              <svg
+                class="w-16 h-16 text-slate-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                ></path>
+              </svg>
+            </div>
+            <p class="text-slate-500 dark:text-slate-400 mb-4">
+              Use the mobile app to scan QR codes
+            </p>
+            <Button id="openScannerBtn" variant="outline">Open Scanner</Button>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</Layout>
+
+<script>
+  import QRCode from "@qr-render/qrcode";
+  import { navigate } from "~/lib/navigation";
+
+  const $authCheck = document.querySelector("#authCheck") as HTMLDivElement;
+  const $app = document.querySelector("#app") as HTMLDivElement;
+  const $logoutBtn = document.querySelector("#logoutBtn") as HTMLButtonElement;
+  const $courseSelect = document.querySelector(
+    "#courseSelect",
+  ) as HTMLSelectElement;
+  const $generateBtn = document.querySelector(
+    "#generateBtn",
+  ) as HTMLButtonElement;
+  const $qrDisplay = document.querySelector("#qrDisplay") as HTMLDivElement;
+  const $qrContainer = document.querySelector("#qrContainer") as HTMLDivElement;
+  const $qrToken = document.querySelector("#qrToken") as HTMLParagraphElement;
+  const $qrExpiry = document.querySelector("#qrExpiry") as HTMLParagraphElement;
+
+  let qrInstance: any;
+  let expiryInterval: number | undefined;
+
+  function checkAuth() {
+    const token = localStorage.getItem("accessToken");
+    const userStr = localStorage.getItem("user");
+    if (!token || !userStr) {
+      navigate("/");
+      return null;
+    }
+    try {
+      return JSON.parse(userStr);
+    } catch {
+      navigate("/");
+      return null;
+    }
+  }
+
+  async function loadCourses(token: string) {
+    const response = await fetch("/api/courses", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await response.json();
+
+    if (Array.isArray(data)) {
+      data.forEach((course: any) => {
+        const option = document.createElement("option");
+        option.value = course.id;
+        option.textContent = course.name;
+        $courseSelect.appendChild(option);
+      });
+    }
+  }
+
+  async function generateQR() {
+    const courseId = $courseSelect.value;
+    if (!courseId) {
+      alert("Please select a course");
+      return;
+    }
+
+    const token = localStorage.getItem("accessToken")!;
+    const response = await fetch("/api/qr", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ courseId }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.token) {
+      if (expiryInterval) clearInterval(expiryInterval);
+
+      $qrContainer.innerHTML = "";
+      qrInstance = new QRCode($qrContainer, {
+        text: JSON.stringify({ token: data.token, courseId }),
+        width: 200,
+        height: 200,
+        colorDark: "#0f172a",
+        colorLight: "#ffffff",
+        roundness: 0.15,
+        margin: 8,
+      });
+
+      $qrDisplay?.classList.remove("hidden");
+      $qrToken.textContent = `Token: ${data.token.slice(0, 20)}...`;
+
+      let seconds = 60;
+      $qrExpiry.textContent = `Expires in ${seconds} seconds`;
+      expiryInterval = window.setInterval(() => {
+        seconds--;
+        if (seconds <= 0) {
+          clearInterval(expiryInterval);
+          $qrExpiry.textContent = "Expired";
+          $qrExpiry.classList.add("text-red-500");
+        } else {
+          $qrExpiry.textContent = `Expires in ${seconds} seconds`;
+        }
+      }, 1000);
+    }
+  }
+
+  $generateBtn?.addEventListener("click", generateQR);
+
+  document.querySelector("#openScannerBtn")?.addEventListener("click", () => {
+    alert("Use the mobile app to scan QR codes.");
+  });
+
+  $logoutBtn?.addEventListener("click", () => {
+    localStorage.clear();
+    navigate("/");
+  });
+
+  const user = checkAuth();
+  if (user) {
+    document.querySelector("#userInfo")!.textContent = user.name;
+    $authCheck?.classList.add("hidden");
+    $app?.classList.remove("hidden");
+
+    const token = localStorage.getItem("accessToken")!;
+    loadCourses(token);
+  }
+</script>

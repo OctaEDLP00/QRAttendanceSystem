@@ -1,16 +1,16 @@
 // @ts-check
 import eslint from '@eslint/js';
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import parserTS from '@typescript-eslint/parser';
+import eslintPluginPrettier from 'eslint-plugin-prettier/recommended';
+import { defineConfig, globalIgnores } from 'eslint/config';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
-export default tseslint.config(
-  {
-    ignores: ['eslint.config.mjs'],
-  },
+export default defineConfig(
+  globalIgnores(['eslint.config.mjs', 'src/generated/', 'test/']),
   eslint.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
-  eslintPluginPrettierRecommended,
+  ...tseslint.configs.recommended,
+  eslintPluginPrettier,
   {
     languageOptions: {
       globals: {
@@ -18,6 +18,7 @@ export default tseslint.config(
         ...globals.jest,
       },
       sourceType: 'commonjs',
+      parser: parserTS,
       parserOptions: {
         projectService: true,
         tsconfigRootDir: import.meta.dirname,

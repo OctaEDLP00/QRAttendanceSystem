@@ -1,0 +1,250 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import Button from "~/components/ui/button";
+import Input from "~/components/ui/input";
+import Label from "~/components/ui/label";
+
+const description =
+  "Manage your courses in the QR Attendance System. Create, edit, and view course details.";
+---
+
+<Layout title="Courses - QR Attendance System" description={description}>
+  <div
+    id="authCheck"
+    class="min-h-screen flex items-center justify-center"
+    role="status"
+  >
+    <div
+      class="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"
+    >
+    </div>
+  </div>
+
+  <div id="app" class="hidden min-h-screen bg-slate-50 dark:bg-slate-900">
+    <header
+      class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10"
+    >
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center gap-4">
+            <a
+              href="/dashboard"
+              class="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+            >
+              ← Back
+            </a>
+            <h1 class="text-xl font-bold text-slate-900 dark:text-white">
+              Courses
+            </h1>
+          </div>
+          <div class="flex items-center gap-4">
+            <span
+              id="userInfo"
+              class="text-sm text-slate-600 dark:text-slate-300"></span>
+            <Button id="logoutBtn" variant="outline" size="sm">Logout</Button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-slate-900 dark:text-white">
+          All Courses
+        </h2>
+        <Button id="createCourseBtn">Create Course</Button>
+      </div>
+
+      <div
+        id="coursesList"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        role="list"
+      >
+        <div
+          class="col-span-full text-center py-12 text-slate-500 dark:text-slate-400"
+        >
+          Loading courses...
+        </div>
+      </div>
+
+      <div
+        id="createModal"
+        class="hidden fixed inset-0 bg-black/50 items-center justify-center z-50"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div
+          class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-md mx-4"
+        >
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+            Create New Course
+          </h3>
+          <form id="createCourseForm" class="space-y-4">
+            <div>
+              <Label size="sm" for="courseName">Course Name</Label>
+              <Input
+                type="text"
+                id="courseName"
+                name="name"
+                required
+                class="mt-1"
+              />
+            </div>
+            <div>
+              <Label size="sm" for="institutionId">Institution</Label>
+              <select
+                id="institutionId"
+                name="institutionId"
+                class="mt-1 w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100"
+                required
+              >
+                <option value="">Select institution</option>
+              </select>
+            </div>
+            <div class="flex gap-3 pt-2">
+              <Button
+                type="button"
+                id="cancelCreate"
+                variant="outline"
+                class="flex-1">Cancel</Button
+              >
+              <Button type="submit" class="flex-1">Create</Button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+</Layout>
+
+<script>
+  import { navigate } from "~/lib/navigation";
+  const $authCheck = document.querySelector("#authCheck") as HTMLDivElement;
+  const $app = document.querySelector("#app") as HTMLDivElement;
+  const $logoutBtn = document.querySelector("#logoutBtn") as HTMLButtonElement;
+  const $coursesList = document.querySelector("#coursesList") as HTMLDivElement;
+  const $createModal = document.querySelector("#createModal") as HTMLDivElement;
+  const $createCourseBtn = document.querySelector(
+    "#createCourseBtn",
+  ) as HTMLButtonElement;
+  const $cancelCreate = document.querySelector(
+    "#cancelCreate",
+  ) as HTMLButtonElement;
+
+  function checkAuth() {
+    const token = localStorage.getItem("accessToken");
+    const userStr = localStorage.getItem("user");
+    if (!token || !userStr) {
+      navigate("/");
+      return null;
+    }
+    try {
+      return JSON.parse(userStr);
+    } catch {
+      navigate("/");
+      return null;
+    }
+  }
+
+  async function loadCourses(token: string) {
+    const response = await fetch("/api/courses", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await response.json();
+
+    if (Array.isArray(data) && data.length > 0) {
+      $coursesList.innerHTML = data
+        .map(
+          (course: any) => `
+        <article class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <h3 class="font-semibold text-slate-900 dark:text-white text-lg">${course.name}</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">ID: ${course.id.slice(0, 8)}...</p>
+          <div class="mt-4 flex gap-2">
+            <a href="/qr?course=${course.id}" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">Generate QR</a>
+          </div>
+        </article>
+      `,
+        )
+        .join("");
+    } else {
+      $coursesList.innerHTML =
+        '<div class="col-span-full text-center py-12 text-slate-500 dark:text-slate-400">No courses found</div>';
+    }
+  }
+
+  async function loadInstitutions(token: string) {
+    const response = await fetch("/api/institutions", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await response.json();
+
+    if (Array.isArray(data)) {
+      const $select = document.querySelector(
+        "#institutionId",
+      ) as HTMLSelectElement;
+      data.forEach((inst: any) => {
+        const option = document.createElement("option");
+        option.value = inst.id;
+        option.textContent = inst.name;
+        $select.appendChild(option);
+      });
+    }
+  }
+
+  $logoutBtn?.addEventListener("click", () => {
+    localStorage.clear();
+    navigate("/");
+  });
+
+  $createCourseBtn?.addEventListener("click", () => {
+    $createModal?.classList.remove("hidden");
+    $createModal?.classList.add("flex");
+  });
+
+  $cancelCreate?.addEventListener("click", () => {
+    $createModal?.classList.remove("flex");
+    $createModal?.classList.add("hidden");
+  });
+
+  document
+    .querySelector("#createCourseForm")
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = e.target as HTMLFormElement;
+      const formData = new FormData(form);
+      const token = localStorage.getItem("accessToken")!;
+      const user = JSON.parse(localStorage.getItem("user")!);
+
+      const courseData = {
+        name: formData.get("name"),
+        institutionId: formData.get("institutionId"),
+        teacherId: user.id,
+      };
+
+      const response = await fetch("/api/courses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(courseData),
+      });
+
+      if (response.ok) {
+        $createModal?.classList.add("hidden");
+        loadCourses(token);
+        form.reset();
+      }
+    });
+
+  const user = checkAuth();
+  if (user) {
+    document.querySelector("#userInfo")!.textContent = user.name;
+    $authCheck?.classList.add("hidden");
+    $app?.classList.remove("hidden");
+
+    const token = localStorage.getItem("accessToken")!;
+    loadCourses(token);
+    loadInstitutions(token);
+  }
+</script>

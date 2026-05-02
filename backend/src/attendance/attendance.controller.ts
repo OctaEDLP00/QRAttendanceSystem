@@ -1,6 +1,12 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { QrService } from '~/qr/qr.service';
-import type { Attendance } from '../../types/index';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Post,
+} from '@nestjs/common';
+import { QrService } from '../qr/qr.service.js';
 import { AttendanceService } from './attendance.service.js';
 
 @Controller('attendance')
@@ -11,35 +17,48 @@ export class AttendanceController {
   ) { }
 
   @Post('register')
-  register(
+  async register(
     @Body('studentId') studentId: string,
     @Body('courseId') courseId: string,
     @Body('latitude') latitude: number,
     @Body('longitude') longitude: number,
-  ): Attendance {
-    return this.attendanceService.register(studentId, courseId, latitude, longitude);
+  ) {
+    return this.attendanceService.register(
+      studentId,
+      courseId,
+      latitude,
+      longitude,
+    );
   }
 
   @Post('scan')
-  scanAttendance(
+  async scanAttendance(
     @Body('qrToken') qrToken: string,
     @Body('courseId') courseId: string,
     @Body('latitude') latitude: number,
     @Body('longitude') longitude: number,
-  ): Attendance {
-    const session = this.qrService.getSessionByToken(courseId, qrToken);
-    const attendance = this.attendanceService.register(session.studentId, courseId, latitude, longitude);
-    this.qrService.expireSession(session.id);
+  ) {
+    const session = await this.qrService.getSessionByToken(courseId, qrToken);
+    if (!session.studentId) {
+      throw new NotFoundException('No student associated with this QR session');
+    }
+    const attendance = await this.attendanceService.register(
+      session.studentId,
+      courseId,
+      latitude,
+      longitude,
+    );
+    await this.qrService.expireSession(session.id);
     return attendance;
   }
 
   @Get('course/:id')
-  getCourseAttendance(@Param('id') courseId: string): Attendance[] {
+  async getCourseAttendance(@Param('id') courseId: string) {
     return this.attendanceService.getCourseAttendance(courseId);
   }
 
   @Get('student/:id')
-  getStudentHistory(@Param('id') studentId: string): Attendance[] {
+  async getStudentHistory(@Param('id') studentId: string) {
     return this.attendanceService.getStudentHistory(studentId);
   }
 }
